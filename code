@@ -1,0 +1,54 @@
+-- View distinct years
+SELECT DISTINCT year
+FROM date;
+
+-- View total revenue for 2020
+SELECT d.year, sum(sales_amount) as total_sales
+FROM transactions t
+JOIN date d
+	ON d.date = t.order_date
+WHERE d.year = 2020;
+
+-- View top 5 product by revenue from Miami market by percentage
+SELECT c.customer_name, 
+		t.product_code, 
+        (sales_amount) as total_revenue_miami,
+		concat(round(sales_amount/sum(sales_amount) OVER(PARTITION BY customer_name),2)*100, "%") as top_5
+FROM transactions t
+JOIN customers c
+	USING(customer_code)
+WHERE market_code = "MARK001"
+GROUP BY t.product_code
+ORDER BY total_revenue_miami DESC
+LIMIT 5;
+
+-- View total sales by region
+
+SELECT m.zone, sum(sales_amount) sales,
+	 sum(sales_amount)/ (SELECT sum(sales_amount) 
+     FROM transactions) as percent_sales
+FROM transactions t
+JOIN markets m
+	ON t.market_code = m.markets_code
+GROUP BY m.zone
+ORDER BY percent_sales DESC;
+
+-- View customers with highest order frequency
+SELECT markets_name, c.customer_name, count(order_date) as frequency
+FROM transactions t
+JOIN customers c
+	USING(customer_code)
+JOIN markets m
+	ON t.market_code = m.markets_code
+GROUP BY customer_name
+ORDER BY frequency DESC;
+
+-- View month with highest volume in 2019
+SELECT d.month_name, count(*) as frequency
+FROM transactions t
+JOIN date d
+	ON d.date = t.order_date
+WHERE order_date LIKE("2019%")
+GROUP BY d.month_name
+ORDER BY frequency DESC
+LIMIT 1;
